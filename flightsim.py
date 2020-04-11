@@ -996,15 +996,11 @@ class TFM(threading.Thread):
         self.readToggle('InstrumentLights', 'Instrument lights', 'on', 'off')
         self.readToggle('APUGenerator', 'A P U Generator', 'active', 'off')
         self.readToggle('AvionicsMaster', 'Avionics master', 'active', 'off')
-<<<<<<< HEAD
         self.readToggle('Eng1FuelValve', 'number 1 fuel valve', 'open', 'closed')
         self.readToggle('Eng2FuelValve', 'number 2 fuel valve', 'open', 'closed')
         self.readToggle('Eng3FuelValve', 'number 3 fuel valve', 'open', 'closed')
         self.readToggle('Eng4FuelValve', 'number 4 fuel valve', 'open', 'closed')
-        
-=======
         self.readToggle("FuelPump", "Fuel pump", "active", "off")
->>>>>>> a2a
 
         if self.groundspeedEnabled:
             if self.instr['GroundSpeed'] > 0 and self.instr['OnGround'] and self.groundSpeed == False:
@@ -1168,7 +1164,7 @@ class TFM(threading.Thread):
         try:
             WPId = self.instr['NextWPId'].decode ('UTF-8')
             distance = self.instr['NextWPDistance'] * 0.00053995
-            msg = F'Next waypoint: {WPId}, distance: {distance:.1f} nautical miles'
+            msg = F'Next waypoint: {WPId}, distance: {distance:.1f} nautical miles. '
             msg = msg + F'baring: {self.instr["NextWPBaring"]:.0f}\n'
             # read estimated time enroute to next waypoint
             strTime = self.secondsToText(self.instr['NextWPETE'])
@@ -1209,10 +1205,12 @@ class TFM(threading.Thread):
                             if "cache" in message:
                                 continue
                             if index < 2 and message != "":
-                                self.output(f'{message}')
+                                if not self.MuteSimC:
+                                    self.output(f'{message}')
                                 self.CachedMessage[index] = message
                             elif message != "":
-                                self.output(f'{i}: {message}')
+                                if not self.MuteSimC:
+                                    self.output(f'{i}: {message}')
                                 self.CachedMessage[index] = f'{i}: {message}'
                                 i += 1
 
@@ -1248,7 +1246,6 @@ class TFM(threading.Thread):
         if len(msg) == 1:
             return
         # log.error(F'{msg}')
-        # breakpoint()
         if self.oldRCMsg != msg[1] and msg[1][:3] != 'Rwy' and msg[1][:1] != '<':
             msgUpdated = True
         if triggered:
@@ -1257,7 +1254,8 @@ class TFM(threading.Thread):
             if index == 0 or message == "" or '<' in message or '/' in message:
                 continue
             if message != "" and msgUpdated == True:
-                self.output (message.replace('\x00', ''))
+                if not self.MuteSimC:
+                    self.output (message.replace('\x00', ''))
                 self.CachedMessage[index] = message
         self.CachedMessage[index] = 'EOM'
         self.oldRCMsg = msg[1]
@@ -1323,7 +1321,7 @@ class TFM(threading.Thread):
             log.error('Error determining timezone: ' + str(e))
             log.exception(str(e))
         if self.triggered:
-            self.speak(msg)
+            self.output(msg)
             self.triggered = False
         else:
             self.output(msg)
